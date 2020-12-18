@@ -54,3 +54,10 @@ class Robot(commands.Bot):
 
     async def on_ready(self) -> None:
         self.logger.info('Bot is ready')
+
+    async def on_command(self, ctx: commands.Context) -> None:
+        self.logger.info('cmd - guild: {guild.id} - channel: {channel.id} - {message}'.format(
+            guild=ctx.guild,
+            channel=ctx.channel,
+            message=ctx.message.content
+        ))

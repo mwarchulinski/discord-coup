@@ -1,8 +1,9 @@
+import random
 import discord.ext.commands as commands
 import pymongo
 from coup.bot import Robot
 from coup.cogs.base import BaseCog
-from coup.cogs.mongo import Session
+from coup.cogs.mongo import Session, CARDS
 import coup.embeds as embeds
 
 
@@ -10,7 +11,7 @@ class GameCog(BaseCog):
 
     # FIXME move this code to a specialized class
     async def find_current_session(self, ctx: commands.Context) -> Session:
-        await self.bot.mongo.Session.find_one({
+        return await self.bot.mongo.Session.find_one({
             'guild_id': ctx.guild.id,
             'channel_id': ctx.channel.id,
             'state': {'$nin': [Session.State.DESTROYED]},
@@ -42,7 +43,7 @@ class GameCog(BaseCog):
 
         self.bot.logger.info('Game session #{} created'.format(session.id))
 
-        message = await ctx.send(embed=embeds.create_game_info(session))
+        message = await ctx.send(embed=embeds.session_info(session))
 
         session.message_id = message.id
         await session.commit()
@@ -64,7 +65,7 @@ class GameCog(BaseCog):
 
         if session.message_id:
             message = await ctx.channel.fetch_message(session.message_id)
-            await message.edit(embed=embeds.create_game_info(session))
+            await message.edit(embed=embeds.session_info(session))
 
     @commands.command(name='show')
     async def cmd_show(self, ctx: commands.Context) -> None:
@@ -76,7 +77,7 @@ class GameCog(BaseCog):
         if not session:
             return
 
-        message = await ctx.send(embed=embeds.create_game_info(session))
+        message = await ctx.send(embed=embeds.session_info(session))
 
         session.message_id = message.id
         await session.commit()
@@ -114,7 +115,7 @@ class GameCog(BaseCog):
 
         if session.message_id:
             message = await ctx.channel.fetch_message(session.message_id)
-            await message.edit(embed=embeds.create_game_info(session))
+            await message.edit(embed=embeds.session_info(session))
 
     @commands.command(name='start')
     async def cmd_start(self, ctx: commands.Context) -> None:
@@ -131,15 +132,50 @@ class GameCog(BaseCog):
         if session.state != Session.State.WAITING:
             return
 
+        """
         if len(session.players) < session.min_players:
             return
+        """
 
+        # shuffle players
+        random.shuffle(session.players)
+
+        # create a deck
+        cursor = self.bot.mongo.Card.find({
+            'key': {'$in': [
+                CARDS['duchesse']['key'],
+                CARDS['assassin']['key'],
+                CARDS['comptesse']['key'],
+                CARDS['ambassadeur']['key']
+            ]}
+        })
+        cards = [card for card in await cursor.to_list(100)]
+
+        session.cards = []
+        for card in cards:
+            for i in range(5):
+                session.cards.append(card)
+
+        # shuffle cards
+        random.shuffle(session.cards)
+
+        # give 2 cards to each player
+        for player in session.players:
+            player.cards = []
+            for i in range(2):
+                card = session.cards.pop()
+                player.cards.append(card)
+
+        # set current player pos to first
+        session.current = 0
+
+        # change session state to PLAYING
         session.state = Session.State.PLAYING
         await session.commit()
 
         if session.message_id:
             message = await ctx.channel.fetch_message(session.message_id)
-            await message.edit(embed=embeds.create_game_info(session))
+            await message.edit(embed=embeds.session_info(session))
 
 
 def setup(bot: Robot) -> None:

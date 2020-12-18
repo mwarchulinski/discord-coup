@@ -8,9 +8,9 @@ def session_state_label(state: str) -> str:
     elif state == Session.State.PLAYING:
         return 'En cours'
     elif state == Session.State.COMPLETED:
-        return 'Terminée'
+        return 'Terminé'
     elif state == Session.State.DESTROYED:
-        return 'Supprimée'
+        return 'Supprimé'
     else:
         return state
 
@@ -28,10 +28,10 @@ def session_state_colour(state: str) -> Colour:
         return None
 
 
-def create_game_info(session: Session) -> Embed:
+def session_info(session: Session) -> Embed:
     players = ['{}'.format(p.name) for p in session.players]
 
-    embed = Embed(title='Coup - Session #{}'.format(session.id))
+    embed = Embed(title='Coup - Prochaine partie'.format(session))
     embed.colour = session_state_colour(session.state)
     embed.add_field(name='Status', value=session_state_label(session.state))
     embed.add_field(name='Disponibilités', value='{} / {} joueurs'.format(len(session.players), session.max_players))

@@ -6,12 +6,12 @@ from umongo import Document, EmbeddedDocument, Instance, fields
 from pymongo.collection import Collection
 
 CARDS = {
-    'duchesse': {'key': '1', 'name': 'Duchesse'},
-    'assassin': {'key': '2', 'name': 'Assassin'},
-    'comptesse': {'key': '3', 'name': 'Comptesse'},
-    'capitaine': {'key': '4', 'name': 'Capitaine'},
-    'ambassadeur': {'key': '5', 'name': 'Ambassadeur'},
-    'inquisiteur': {'key': '6', 'name': 'Inquisiteur'}
+    'duchesse': {'name': 'Duchesse'},
+    'assassin': {'name': 'Assassin'},
+    'comptesse': {'name': 'Comptesse'},
+    'capitaine': {'name': 'Capitaine'},
+    'ambassadeur': {'name': 'Ambassadeur'},
+    'inquisiteur': {'name': 'Inquisiteur'}
 }
 
 
@@ -76,11 +76,11 @@ class MongoCog(BaseCog):
         return self._db
 
     async def migrate(self):
-        for c in CARDS.values():
-            card = await self.Card.find_one({'name': c['name']})
+        for key, value in CARDS.items():
+            card = await self.Card.find_one({'key': key})
             if not card:
-                self.bot.logger.info('Add card {} in database'.format(c))
-                card = self.Card(key=c['key'], name=c['name'])
+                self.bot.logger.info('Add card {} in database'.format(key))
+                card = self.Card(key=key, **value)
                 await card.commit()
 
 

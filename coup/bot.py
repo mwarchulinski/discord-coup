@@ -47,7 +47,10 @@ class Robot(commands.Bot):
         self.command_prefix = self._config.get('command_prefix', '!')
 
     def _load_extensions(self) -> None:
-        extensions = ('mongo', 'game')
+        extensions = (
+            'mongo',
+            'game'
+        )
         for ext in extensions:
             self.logger.info('Load extension {}'.format(ext))
             self.load_extension('coup.cogs.{}'.format(ext))

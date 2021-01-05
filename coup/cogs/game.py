@@ -143,10 +143,10 @@ class GameCog(BaseCog):
         # create a deck
         cursor = self.bot.mongo.Card.find({
             'key': {'$in': [
-                CARDS['duchesse']['key'],
-                CARDS['assassin']['key'],
-                CARDS['comptesse']['key'],
-                CARDS['ambassadeur']['key']
+                'duchesse',
+                'assassin',
+                'comptesse',
+                'ambassadeur'
             ]}
         })
         cards = [card for card in await cursor.to_list(100)]
